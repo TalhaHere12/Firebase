@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { addTask, getAllTasks } from '../services/FirestoreServices'; 
+import { addTask, getAllTasks, deleteTask } from '../services/FirestoreServices'; 
 
 const TaskScreen = () => {
   const [task, setTask] = useState('');
@@ -9,15 +9,21 @@ const TaskScreen = () => {
   useEffect(() => {
     fetchTasks();
   }, []);
+
   const fetchTasks = async () => {
-    const fetchedTasks = await getAllTasks(); 
+    const fetchedTasks = await getAllTasks();
     setTasks(fetchedTasks);
   };
 
   const handleAddTask = async () => {
     if (task.trim() === '') return;
-    await addTask({ title: task, completed: false }); 
+    await addTask({ title: task, completed: false });
     setTask('');
+    fetchTasks();
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    await deleteTask(taskId); 
     fetchTasks(); 
   };
 
@@ -38,9 +44,13 @@ const TaskScreen = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.taskItem}>
-            <Text style={styles.taskText}>
-              {item.title}
-            </Text>
+            <Text style={styles.taskText}>{item.title}</Text>
+            <TouchableOpacity 
+              style={styles.deleteButton} 
+              onPress={() => handleDeleteTask(item.id)} 
+            >
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -84,8 +94,22 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   taskText: {
     fontSize: 18,
+    flex: 1,
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    padding: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 14,
   },
 });
